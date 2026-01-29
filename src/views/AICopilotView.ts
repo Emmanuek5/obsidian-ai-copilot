@@ -137,17 +137,7 @@ export class AICopilotView extends ItemView {
 		// Left side controls - positioned absolutely inside textarea
 		const leftControls = inputContainer.createDiv({ cls: 'ai-copilot-input-controls-left' });
 		
-		// @ mention button
-		const mentionBtn = leftControls.createEl('button', {
-			cls: 'ai-copilot-input-icon-btn',
-			attr: { 'aria-label': 'Add context', 'title': 'Add context (@)' }
-		});
-		mentionBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z"></path><path d="M16 12v1a2 2 0 0 0 4 0v-1a10 10 0 1 0-3.92 7.94"></path></svg>';
-		mentionBtn.addEventListener('click', () => {
-			this.inputEl.value += '@';
-			this.inputEl.focus();
-			this.inputEl.dispatchEvent(new Event('input'));
-		});
+
 		
 		// Attachment button
 		const attachBtn = leftControls.createEl('button', {
