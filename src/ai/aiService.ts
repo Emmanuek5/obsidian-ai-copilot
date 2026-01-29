@@ -3,6 +3,8 @@ import { stepCountIs, streamText, tool } from 'ai';
 import { z } from 'zod';
 import type AICopilotPlugin from '../main';
 import { TFile } from 'obsidian';
+import { KanbanIntegration } from '../integrations/kanbanIntegration';
+import { LatexIntegration } from '../integrations/latexIntegration';
 
 export interface AIMessage {
 	role: 'user' | 'assistant' | 'system';
@@ -51,9 +53,13 @@ interface SDKMessage {
 
 export class AIService {
 	private plugin: AICopilotPlugin;
+	private kanbanIntegration: KanbanIntegration;
+	private latexIntegration: LatexIntegration;
 
 	constructor(plugin: AICopilotPlugin) {
 		this.plugin = plugin;
+		this.kanbanIntegration = new KanbanIntegration(plugin.app);
+		this.latexIntegration = new LatexIntegration(plugin.app);
 	}
 
 	private getModel() {
@@ -262,6 +268,159 @@ export class AIService {
 					return { success: true, message: `Opened ${file.name} in a new tab` };
 				},
 			}),
+
+			// Kanban Integration Tools
+			kanbanAddTask: tool({
+				description: 'Add a task to a specific lane in a Kanban board',
+				parameters: z.object({
+					boardPath: z.string().describe('Path to the Kanban board file (e.g., "Project Board.md")'),
+					laneTitle: z.string().describe('Title of the lane to add the task to (e.g., "To Do", "In Progress")'),
+					taskTitle: z.string().describe('Title of the task to add'),
+				}),
+				execute: async ({ boardPath, laneTitle, taskTitle }) => {
+					if (!this.kanbanIntegration.isAvailable()) {
+						return { success: false, error: 'Kanban plugin is not installed or not enabled' };
+					}
+					
+					const success = await this.kanbanIntegration.addTask(boardPath, laneTitle, taskTitle);
+					return { success, message: success ? 'Task added successfully' : 'Failed to add task' };
+				},
+			}),
+
+			kanbanAddLane: tool({
+				description: 'Add a new lane to a Kanban board',
+				parameters: z.object({
+					boardPath: z.string().describe('Path to the Kanban board file'),
+					laneTitle: z.string().describe('Title for the new lane'),
+					position: z.enum(['first', 'last']).optional().describe('Position to add the lane (default: last)'),
+				}),
+				execute: async ({ boardPath, laneTitle, position }) => {
+					if (!this.kanbanIntegration.isAvailable()) {
+						return { success: false, error: 'Kanban plugin is not installed or not enabled' };
+					}
+					
+					const success = await this.kanbanIntegration.addLane(boardPath, laneTitle, position);
+					return { success, message: success ? 'Lane added successfully' : 'Failed to add lane' };
+				},
+			}),
+
+			kanbanMoveTask: tool({
+				description: 'Move a task from one lane to another',
+				parameters: z.object({
+					boardPath: z.string().describe('Path to the Kanban board file'),
+					taskTitle: z.string().describe('Title of the task to move'),
+					fromLane: z.string().describe('Title of the source lane'),
+					toLane: z.string().describe('Title of the destination lane'),
+				}),
+				execute: async ({ boardPath, taskTitle, fromLane, toLane }) => {
+					if (!this.kanbanIntegration.isAvailable()) {
+						return { success: false, error: 'Kanban plugin is not installed or not enabled' };
+					}
+					
+					const success = await this.kanbanIntegration.moveTask(boardPath, taskTitle, fromLane, toLane);
+					return { success, message: success ? 'Task moved successfully' : 'Failed to move task' };
+				},
+			}),
+
+			kanbanListLanes: tool({
+				description: 'List all lanes in a Kanban board',
+				parameters: z.object({
+					boardPath: z.string().describe('Path to the Kanban board file'),
+				}),
+				execute: async ({ boardPath }) => {
+					if (!this.kanbanIntegration.isAvailable()) {
+						return { success: false, error: 'Kanban plugin is not installed or not enabled' };
+					}
+					
+					const lanes = await this.kanbanIntegration.listLanes(boardPath);
+					return { success: true, lanes };
+				},
+			}),
+
+			kanbanListTasks: tool({
+				description: 'List all tasks in a specific lane',
+				parameters: z.object({
+					boardPath: z.string().describe('Path to the Kanban board file'),
+					laneTitle: z.string().describe('Title of the lane'),
+				}),
+				execute: async ({ boardPath, laneTitle }) => {
+					if (!this.kanbanIntegration.isAvailable()) {
+						return { success: false, error: 'Kanban plugin is not installed or not enabled' };
+					}
+					
+					const tasks = await this.kanbanIntegration.listTasks(boardPath, laneTitle);
+					return { success: true, tasks };
+				},
+			}),
+
+			// LaTeX Integration Tools
+			latexInsertFormula: tool({
+				description: 'Insert a LaTeX formula into the active editor',
+				parameters: z.object({
+					formula: z.string().describe('LaTeX formula to insert'),
+					displayMode: z.boolean().optional().describe('Use display mode (block) instead of inline'),
+				}),
+				execute: async ({ formula, displayMode }) => {
+					if (!this.latexIntegration.isAvailable()) {
+						return { success: false, error: 'LaTeX Suite plugin is not installed or not enabled' };
+					}
+					
+					const success = await this.latexIntegration.insertFormula(formula, displayMode);
+					return { success, message: success ? 'Formula inserted successfully' : 'Failed to insert formula' };
+				},
+			}),
+
+			latexGetFormula: tool({
+				description: 'Get a common LaTeX formula by name or keyword',
+				parameters: z.object({
+					name: z.string().describe('Name or keyword of the formula (e.g., "fraction", "integral", "kinetic_energy")'),
+				}),
+				execute: async ({ name }) => {
+					if (!this.latexIntegration.isAvailable()) {
+						return { success: false, error: 'LaTeX Suite plugin is not installed or not enabled' };
+					}
+					
+					const formula = this.latexIntegration.getFormula(name);
+					if (!formula) {
+						return { success: false, error: `Formula "${name}" not found` };
+					}
+					
+					return { success: true, formula };
+				},
+			}),
+
+			latexGenerateMatrix: tool({
+				description: 'Generate a LaTeX matrix',
+				parameters: z.object({
+					rows: z.number().describe('Number of rows'),
+					cols: z.number().describe('Number of columns'),
+					values: z.array(z.array(z.string())).optional().describe('Optional values for the matrix cells'),
+				}),
+				execute: async ({ rows, cols, values }) => {
+					if (!this.latexIntegration.isAvailable()) {
+						return { success: false, error: 'LaTeX Suite plugin is not installed or not enabled' };
+					}
+					
+					const latex = this.latexIntegration.generateMatrix(rows, cols, values);
+					return { success: true, latex };
+				},
+			}),
+
+			latexGenerateEquation: tool({
+				description: 'Generate a LaTeX equation',
+				parameters: z.object({
+					lhs: z.string().describe('Left-hand side of the equation'),
+					rhs: z.string().describe('Right-hand side of the equation'),
+				}),
+				execute: async ({ lhs, rhs }) => {
+					if (!this.latexIntegration.isAvailable()) {
+						return { success: false, error: 'LaTeX Suite plugin is not installed or not enabled' };
+					}
+					
+					const latex = this.latexIntegration.generateEquation(lhs, rhs);
+					return { success: true, latex };
+				},
+			}),
 		};
 	}
 
@@ -444,6 +603,10 @@ export class AIService {
 		// Get memory context
 		const memoryContext = this.plugin.memoryManager.getMemoryContext();
 		
+		// Check plugin availability
+		const kanbanAvailable = this.kanbanIntegration.isAvailable();
+		const latexAvailable = this.latexIntegration.isAvailable();
+		
 		let systemContent = `You are an AI assistant integrated into Obsidian, a note-taking application.
 
 You have access to tools to interact with the vault:
@@ -456,6 +619,26 @@ You have access to tools to interact with the vault:
 - getCurrentDate: Get current date/time
 - addMemory: Save important info to remember across conversations
 - openFile: Open a file in a new Obsidian tab for the user
+
+${kanbanAvailable ? `**Kanban Integration Available:**
+- kanbanAddTask: Add tasks to Kanban board lanes
+- kanbanAddLane: Create new lanes in Kanban boards
+- kanbanMoveTask: Move tasks between lanes
+- kanbanListLanes: List all lanes in a board
+- kanbanListTasks: List tasks in a specific lane` : ''}
+
+${latexAvailable ? `**LaTeX Integration Available:**
+- latexInsertFormula: Insert LaTeX formulas into the editor
+- latexGetFormula: Get common LaTeX formulas by name
+- latexGenerateMatrix: Generate LaTeX matrices
+- latexGenerateEquation: Generate LaTeX equations
+
+You can help users with:
+- Mathematical formulas (fractions, integrals, derivatives, etc.)
+- Physics equations (force, energy, relativity, etc.)
+- Statistical expressions
+- Matrix operations
+- Any LaTeX mathematical notation` : ''}
 
 When the user shares audio files (mp3, wav, ogg, m4a, aac, flac, aiff), you can transcribe and analyze their content.
 

@@ -28,11 +28,11 @@ export class KanbanIntegration {
 	}
 
 	isAvailable(): boolean {
-		return !!this.app.plugins.plugins['obsidian-kanban'];
+		return !!(this.app as any).plugins?.plugins['obsidian-kanban'];
 	}
 
 	getPlugin(): any {
-		return this.app.plugins.plugins['obsidian-kanban'];
+		return (this.app as any).plugins?.plugins['obsidian-kanban'];
 	}
 
 	/**
