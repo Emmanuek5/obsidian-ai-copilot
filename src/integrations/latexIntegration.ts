@@ -1,4 +1,4 @@
-import { App, Notice } from 'obsidian';
+import { App, Notice, MarkdownView } from 'obsidian';
 
 export class LatexIntegration {
 	private app: App;
@@ -8,11 +8,11 @@ export class LatexIntegration {
 	}
 
 	isAvailable(): boolean {
-		return !!this.app.plugins.plugins['obsidian-latex-suite'];
+		return !!(this.app as any).plugins?.plugins['obsidian-latex-suite'];
 	}
 
 	getPlugin(): any {
-		return this.app.plugins.plugins['obsidian-latex-suite'];
+		return (this.app as any).plugins?.plugins['obsidian-latex-suite'];
 	}
 
 	/**
@@ -26,7 +26,7 @@ export class LatexIntegration {
 		}
 
 		// Get the active editor view
-		const activeView = this.app.workspace.getActiveViewOfType('markdown');
+		const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 		if (!activeView) {
 			new Notice('No active markdown view');
 			return false;
