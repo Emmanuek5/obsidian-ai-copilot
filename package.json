@@ -1,0 +1,23 @@
+{
+  "name": "obsidian-ai-copilot",
+  "version": "0.1.0",
+  "main": "main.js",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun build src/main.ts --outdir . --target=node --format=cjs --external=obsidian --external=@codemirror/autocomplete --external=@codemirror/collab --external=@codemirror/commands --external=@codemirror/language --external=@codemirror/lint --external=@codemirror/search --external=@codemirror/state --external=@codemirror/view --external=@lezer/common --external=@lezer/highlight --external=@lezer/lr --watch",
+    "build": "bun build src/main.ts --outdir . --target=node --format=cjs --external=obsidian --external=@codemirror/autocomplete --external=@codemirror/collab --external=@codemirror/commands --external=@codemirror/language --external=@codemirror/lint --external=@codemirror/search --external=@codemirror/state --external=@codemirror/view --external=@lezer/common --external=@lezer/highlight --external=@lezer/lr --minify"
+  },
+  "dependencies": {
+    "@ai-sdk/google": "^3.0.15",
+    "ai": "^6.0.57",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "obsidian": "^1.11.4"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
