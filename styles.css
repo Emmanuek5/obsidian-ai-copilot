@@ -236,17 +236,14 @@
 }
 
 /* ============================================
-   Input Area - Flush with buttons inside
+   Input Area - Unified container design
    ============================================ */
 
 .ai-copilot-input-wrapper {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-	padding: 8px;
-	background: var(--background-secondary);
+	position: relative;
+	padding: 12px 16px 16px;
+	background: var(--background-primary);
 	border-top: 1px solid var(--background-modifier-border);
-	flex-shrink: 0;
 }
 
 /* Pending attachments area */
@@ -254,6 +251,7 @@
 	display: flex;
 	flex-wrap: wrap;
 	gap: 6px;
+	margin-bottom: 8px;
 }
 
 .ai-copilot-pending-attachment {
@@ -261,7 +259,7 @@
 	align-items: center;
 	gap: 6px;
 	padding: 4px 8px;
-	background: var(--background-primary);
+	background: var(--background-secondary);
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 12px;
 	font-size: 12px;
@@ -296,61 +294,43 @@
 	color: var(--text-normal);
 }
 
-/* Input row - holds attach button, textarea, send button */
-.ai-copilot-input-row {
-	display: flex;
-	align-items: flex-end;
-	gap: 0;
+/* Input container - relative positioning for absolute buttons */
+.ai-copilot-input-container {
+	position: relative;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 12px;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-/* Attachment Button - inside left */
-.ai-copilot-attach-btn {
-	flex-shrink: 0;
-	width: 32px;
-	height: 32px;
-	margin-right: 4px;
-	margin-bottom: 4px;
-	padding: 0;
-	border: none;
-	background: transparent;
-	color: var(--text-muted);
-	border-radius: 6px;
-	cursor: pointer;
-	transition: all 0.15s ease;
-	font-size: 20px;
-	font-weight: 300;
-	display: flex;
-	align-items: center;
-	justify-content: center;
+.ai-copilot-input-container:focus-within {
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 1px var(--interactive-accent);
 }
 
-.ai-copilot-attach-btn:hover {
-	background: var(--background-modifier-hover);
-	color: var(--text-normal);
-}
-
-/* Input Textarea */
+/* Textarea fills the container */
 .ai-copilot-input {
-	flex: 1;
-	min-height: 36px;
-	max-height: 150px;
-	padding: 8px 12px;
-	font-size: 14px;
-	font-family: var(--font-text);
-	line-height: 1.5;
+	width: 100%;
+	min-height: 80px;
+	max-height: 200px;
+	padding: 12px 52px 12px 80px; /* Space for buttons on both sides */
 	border: none;
 	background: transparent;
 	color: var(--text-normal);
 	resize: none;
+	font-family: var(--font-text);
+	font-size: 14px;
+	line-height: 1.5;
 	overflow-y: auto;
-}
-
-.ai-copilot-input::placeholder {
-	color: var(--text-faint);
+	box-sizing: border-box;
 }
 
 .ai-copilot-input:focus {
 	outline: none;
+}
+
+.ai-copilot-input::placeholder {
+	color: var(--text-faint);
 }
 
 .ai-copilot-input:disabled {
@@ -358,30 +338,78 @@
 	cursor: not-allowed;
 }
 
-/* Send Button - inside right */
-.ai-copilot-send-btn {
-	flex-shrink: 0;
+/* Left controls - absolutely positioned inside textarea */
+.ai-copilot-input-controls-left {
+	position: absolute;
+	left: 8px;
+	bottom: 8px;
+	display: flex;
+	gap: 4px;
+	align-items: center;
+	z-index: 1;
+}
+
+/* Right controls - absolutely positioned inside textarea */
+.ai-copilot-input-controls-right {
+	position: absolute;
+	right: 8px;
+	bottom: 8px;
+	display: flex;
+	gap: 4px;
+	align-items: center;
+	z-index: 1;
+}
+
+.ai-copilot-input-icon-btn {
 	width: 32px;
 	height: 32px;
-	margin-left: 4px;
-	margin-bottom: 4px;
+	padding: 0;
+	border: none;
+	background: var(--background-primary);
+	color: var(--text-muted);
+	border-radius: 8px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.ai-copilot-input-icon-btn:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.ai-copilot-input-icon-btn svg {
+	width: 18px;
+	height: 18px;
+}
+
+.ai-copilot-send-btn {
+	width: 32px;
+	height: 32px;
 	padding: 0;
 	border: none;
 	background: var(--interactive-accent);
 	color: var(--text-on-accent);
-	border-radius: 6px;
+	border-radius: 8px;
 	cursor: pointer;
 	transition: all 0.15s ease;
-	font-size: 16px;
-	font-weight: bold;
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	flex-shrink: 0;
+}
+
+.ai-copilot-send-btn svg {
+	width: 18px;
+	height: 18px;
 }
 
 .ai-copilot-send-btn:hover:not(:disabled) {
 	opacity: 0.9;
-	transform: scale(1.02);
+	transform: scale(1.05);
 }
 
 .ai-copilot-send-btn:disabled {

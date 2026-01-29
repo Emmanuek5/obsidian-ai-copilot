@@ -107,32 +107,22 @@ export class AICopilotView extends ItemView {
 		// Pending attachments display (above input)
 		this.attachmentsEl = inputWrapper.createDiv({ cls: 'ai-copilot-pending-attachments' });
 		
-		// Input row (button, textarea, send button)
-		const inputRow = inputWrapper.createDiv({ cls: 'ai-copilot-input-row' });
+		// Input container - relative positioning for absolute buttons
+		const inputContainer = inputWrapper.createDiv({ cls: 'ai-copilot-input-container' });
 		
-		// Attachment button (inside)
-		const attachBtn = inputRow.createEl('button', {
-			cls: 'ai-copilot-attach-btn',
-			text: '+',
-			attr: { 'aria-label': 'Attach file' }
-		});
-		attachBtn.addEventListener('click', () => {
-			this.inputEl.value += '@';
-			this.inputEl.focus();
-			this.inputEl.dispatchEvent(new Event('input'));
-		});
-		
-		// Textarea
-		this.inputEl = inputRow.createEl('textarea', {
+		// Textarea fills the container
+		this.inputEl = inputContainer.createEl('textarea', {
 			cls: 'ai-copilot-input',
 			attr: {
-				placeholder: 'Message AI Copilot...',
+				placeholder: 'Message AI Copilot • @ to add context • / for custom prompts',
 				rows: '3',
 			},
 		});
 
-		// Handle @ mentions
+		// Auto-resize textarea
 		this.inputEl.addEventListener('input', () => {
+			this.inputEl.style.height = 'auto';
+			this.inputEl.style.height = Math.min(this.inputEl.scrollHeight, 200) + 'px';
 			this.mentionHandler.handleInput(new Event('input'), this.inputEl);
 		});
 
@@ -144,13 +134,42 @@ export class AICopilotView extends ItemView {
 			}
 		});
 
-		// Send button (inside, right side)
-		this.sendButton = inputRow.createEl('button', {
-			cls: 'ai-copilot-send-btn',
-			text: '↑',
-			attr: { 'aria-label': 'Send message' }
+		// Left side controls - positioned absolutely inside textarea
+		const leftControls = inputContainer.createDiv({ cls: 'ai-copilot-input-controls-left' });
+		
+		// @ mention button
+		const mentionBtn = leftControls.createEl('button', {
+			cls: 'ai-copilot-input-icon-btn',
+			attr: { 'aria-label': 'Add context', 'title': 'Add context (@)' }
+		});
+		mentionBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z"></path><path d="M16 12v1a2 2 0 0 0 4 0v-1a10 10 0 1 0-3.92 7.94"></path></svg>';
+		mentionBtn.addEventListener('click', () => {
+			this.inputEl.value += '@';
+			this.inputEl.focus();
+			this.inputEl.dispatchEvent(new Event('input'));
 		});
 		
+		// Attachment button
+		const attachBtn = leftControls.createEl('button', {
+			cls: 'ai-copilot-input-icon-btn',
+			attr: { 'aria-label': 'Attach file', 'title': 'Attach file' }
+		});
+		attachBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>';
+		attachBtn.addEventListener('click', () => {
+			this.inputEl.value += '@';
+			this.inputEl.focus();
+			this.inputEl.dispatchEvent(new Event('input'));
+		});
+
+		// Right side controls - positioned absolutely inside textarea
+		const rightControls = inputContainer.createDiv({ cls: 'ai-copilot-input-controls-right' });
+		
+		// Send button
+		this.sendButton = rightControls.createEl('button', {
+			cls: 'ai-copilot-send-btn',
+			attr: { 'aria-label': 'Send message', 'title': 'Send message' }
+		});
+		this.sendButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg>';
 		this.sendButton.addEventListener('click', () => this.sendMessage());
 	}
 
@@ -193,6 +212,14 @@ export class AICopilotView extends ItemView {
 		});
 	}
 
+	private scrollToBottom() {
+		if (this.messagesEl) {
+			setTimeout(() => {
+				this.messagesEl.scrollTop = this.messagesEl.scrollHeight;
+			}, 50);
+		}
+	}
+
 	private renderMessages() {
 		this.messagesEl.empty();
 
@@ -208,8 +235,8 @@ export class AICopilotView extends ItemView {
 			this.renderMessage(message);
 		}
 
-		// Scroll to bottom
-		this.messagesEl.scrollTop = this.messagesEl.scrollHeight;
+		// Auto-scroll to bottom after rendering
+		this.scrollToBottom();
 	}
 
 	private renderMessage(message: AIMessage) {
@@ -342,9 +369,11 @@ export class AICopilotView extends ItemView {
 		// Add user message to conversation
 		this.currentConversation.messages.push(userMessage);
 		this.renderMessage(userMessage);
-
-		// Clear input and pending attachments
+		this.scrollToBottom();
+		
+		// Clear input and reset height
 		this.inputEl.value = '';
+		this.inputEl.style.height = 'auto';
 		this.pendingAttachments = [];
 		this.renderPendingAttachments();
 

@@ -229,9 +229,38 @@ export class KanbanIntegration {
 	}
 
 	/**
-	 * Move a task from one lane to another
+	 * Find which lane a task is in
 	 */
-	async moveTask(boardPath: string, taskTitle: string, fromLane: string, toLane: string): Promise<boolean> {
+	async findTaskLane(boardPath: string, taskTitle: string): Promise<string | null> {
+		const file = this.app.vault.getAbstractFileByPath(boardPath);
+		if (!(file instanceof TFile)) {
+			return null;
+		}
+
+		const content = await this.app.vault.read(file);
+		const board = this.markdownToBoard(content);
+
+		if (!board) {
+			return null;
+		}
+
+		for (const lane of board.lanes) {
+			if (lane.children) {
+				const task = lane.children.find((t) => t.title.toLowerCase() === taskTitle.toLowerCase());
+				if (task) {
+					return lane.title;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Move a task from one lane to another
+	 * If fromLane is not provided, it will automatically find the task's current lane
+	 */
+	async moveTask(boardPath: string, taskTitle: string, fromLane: string | undefined, toLane: string): Promise<boolean> {
 		const file = this.app.vault.getAbstractFileByPath(boardPath);
 		if (!(file instanceof TFile)) {
 			new Notice('Board file not found');
@@ -246,8 +275,19 @@ export class KanbanIntegration {
 			return false;
 		}
 
+		// If fromLane not provided, find it automatically
+		let sourceLaneName = fromLane;
+		if (!sourceLaneName) {
+			const foundLane = await this.findTaskLane(boardPath, taskTitle);
+			if (!foundLane) {
+				new Notice(`Task "${taskTitle}" not found in any lane`);
+				return false;
+			}
+			sourceLaneName = foundLane;
+		}
+
 		// Find source and destination lanes
-		const sourceLane = board.lanes.find((l) => l.title.toLowerCase() === fromLane.toLowerCase());
+		const sourceLane = board.lanes.find((l) => l.title.toLowerCase() === sourceLaneName!.toLowerCase());
 		const destLane = board.lanes.find((l) => l.title.toLowerCase() === toLane.toLowerCase());
 
 		if (!sourceLane || !destLane) {
@@ -258,7 +298,7 @@ export class KanbanIntegration {
 		// Find and move the task
 		const taskIndex = sourceLane.children?.findIndex((t) => t.title.toLowerCase() === taskTitle.toLowerCase());
 		if (taskIndex === undefined || taskIndex === -1) {
-			new Notice(`Task "${taskTitle}" not found in "${fromLane}"`);
+			new Notice(`Task "${taskTitle}" not found in "${sourceLaneName}"`);
 			return false;
 		}
 
@@ -272,7 +312,7 @@ export class KanbanIntegration {
 		const newContent = this.boardToMarkdown(board);
 		await this.app.vault.modify(file, newContent);
 		
-		new Notice(`Moved "${taskTitle}" from "${fromLane}" to "${toLane}"`);
+		new Notice(`Moved "${taskTitle}" from "${sourceLaneName}" to "${toLane}"`);
 		return true;
 	}
 

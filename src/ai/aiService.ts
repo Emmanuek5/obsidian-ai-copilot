@@ -305,12 +305,12 @@ export class AIService {
 			}),
 
 			kanbanMoveTask: tool({
-				description: 'Move a task from one lane to another',
+				description: 'Move a task from one lane to another in a Kanban board. The task will be automatically found if fromLane is not specified.',
 				parameters: z.object({
-					boardPath: z.string().describe('Path to the Kanban board file'),
-					taskTitle: z.string().describe('Title of the task to move'),
-					fromLane: z.string().describe('Title of the source lane'),
-					toLane: z.string().describe('Title of the destination lane'),
+					boardPath: z.string().describe('Path to the Kanban board file (e.g., "Project Board.md")'),
+					taskTitle: z.string().describe('Exact title of the task to move'),
+					toLane: z.string().describe('Title of the destination lane (e.g., "In Progress", "Done")'),
+					fromLane: z.string().optional().describe('Title of the source lane (optional - will auto-detect if not provided)'),
 				}),
 				execute: async ({ boardPath, taskTitle, fromLane, toLane }) => {
 					if (!this.kanbanIntegration.isAvailable()) {

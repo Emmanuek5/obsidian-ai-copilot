@@ -1,6 +1,40 @@
 # Changelog & Roadmap
 
-## Version 0.1.0 (Current) - Initial Release
+## Version 0.1.1 (Current) - Plugin Integrations
+
+### ✅ New Features
+
+#### Kanban Integration
+- [x] Kanban plugin detection and integration
+- [x] Add tasks to Kanban board lanes
+- [x] Create new lanes in boards
+- [x] Move tasks between lanes (auto-detects source lane)
+- [x] List all lanes in a board
+- [x] List tasks in specific lanes
+- [x] Automatic task location detection
+
+#### LaTeX Integration
+- [x] LaTeX Suite plugin detection and integration
+- [x] Insert LaTeX formulas (inline and display mode)
+- [x] Common formula library (100+ formulas)
+- [x] Generate matrices with custom dimensions
+- [x] Generate equations
+- [x] Support for math, physics, statistics, and chemistry formulas
+- [x] Natural language to LaTeX conversion helpers
+
+#### AI Capabilities
+- [x] 9 new AI tools for Kanban and LaTeX
+- [x] Dynamic system prompt based on available plugins
+- [x] Context-aware tool suggestions
+
+### 🔧 Files Added
+- `src/integrations/kanbanIntegration.ts` - Kanban board manipulation
+- `src/integrations/latexIntegration.ts` - LaTeX formula generation and insertion
+
+### 🔧 Files Modified
+- `src/ai/aiService.ts` - Added Kanban and LaTeX tools, updated system prompt
+
+## Version 0.1.0 - Initial Release
 
 ### ✅ Features Implemented
 
